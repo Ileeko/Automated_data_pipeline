@@ -1,0 +1,7 @@
+streamlit
+pandas[2.2.1]
+gspread
+plotly
+yfinance
+StockNews
+google-auth
