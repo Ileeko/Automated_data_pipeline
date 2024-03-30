@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import yfinance as yf
 from stocknews import StockNews
 
-
+@st.cache_data(ttl=86400)
 def get_data():
    # Authenticate and open the Google Sheet
     credentials_dict = st.secrets['gcp_service_account']
