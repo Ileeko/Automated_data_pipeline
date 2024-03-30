@@ -25,7 +25,7 @@ def get_data():
     return df
 
 def load_data_sheet():
-    @st.cache_data()
+    
     def _load_data_sheet():
         price_df = get_data()
         # Convert 'Date' column to the desired format ('2020/01/01')
@@ -41,7 +41,7 @@ def load_data_sheet():
     return _load_data_sheet()
 
 def load_data_yfinance():
-    @st.cache_data()
+    
     def _load_data_yfinance():
         today = date.today()
         yesterday = today - timedelta(days=1)
