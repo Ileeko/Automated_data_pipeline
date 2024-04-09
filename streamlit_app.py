@@ -168,21 +168,18 @@ def main():
     if resample_rule is None:
         filtered_data['SMA20'] = filtered_data['Close'].rolling(window=sma20_period).mean()
         filtered_data['SMA100'] = filtered_data['Close'].rolling(window=sma100_period).mean()
-        filtered_data['SMA200'] = filtered_data['Close'].rolling(window=sma200_period).mean()
         filtered_data['EMA9'] = filtered_data['Close'].ewm(span=ema9_period, adjust=False).mean()
         filtered_data['EMA18'] = filtered_data['Close'].ewm(span=ema18_period, adjust=False).mean()
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
     elif resample_rule == 'W':
         filtered_data['SMA20'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma20_period * 7).mean()
         filtered_data['SMA100'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma100_period).mean()
-        filtered_data['SMA200'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma200_period).mean()
         filtered_data['EMA9'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema9_period, adjust=False).mean()
         filtered_data['EMA18'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema18_period, adjust=False).mean()
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
     elif resample_rule == 'M':
         filtered_data['SMA20'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma20_period).mean()
         filtered_data['SMA100'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma100_period).mean()
-        filtered_data['SMA200'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma200_period).mean()
         filtered_data['EMA9'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema9_period, adjust=False).mean()
         filtered_data['EMA18'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema18_period, adjust=False).mean()
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
@@ -205,12 +202,6 @@ def main():
                                     mode='lines',
                                     line=dict(color='red', width=2),
                                     name=f'SMA {sma100_period}',
-                                    visible='legendonly'),
-                        go.Scatter(x=filtered_data.index,
-                                    y=filtered_data['SMA200'],
-                                    mode='lines',
-                                    line=dict(color='green', width=2),
-                                    name=f'SMA {sma200_period}',
                                     visible='legendonly'),
                         go.Scatter(x=filtered_data.index,
                                     y=filtered_data['EMA9'],
@@ -244,7 +235,47 @@ def main():
             ])
         )
     )
-    st.plotly_chart(fig)
+
+    # RSI chart
+    fig_rsi = go.Figure(data=[go.Scatter(x=filtered_data.index,
+                                        y=filtered_data['RSI'],
+                                        mode='lines',
+                                        line=dict(color='purple', width=2),
+                                        showlegend=False)])
+    
+    
+    # Add horizontal lines at RSI levels 30, 50, and 70
+    rsi_levels = [30, 50, 70]
+    for level in rsi_levels:
+        fig_rsi.add_trace(go.Scatter(x=filtered_data.index,
+                                    y=[level] * len(filtered_data),
+                                    mode='lines',
+                                    line=dict(color='yellow', width=1, dash='dash'),
+                                    showlegend=False))
+
+    # Update layout for RSI chart
+    fig_rsi.update_layout(title='RSI',
+                        xaxis_title='Date',
+                        yaxis_title='RSI',
+                        height=500)
+    fig_rsi.update_xaxes(
+        rangeslider_visible=False,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=14, label="2w", step="day", stepmode="backward"),
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(count=1, label="1y", step="year", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
+
+    # DISPLAY PLOTS
+    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_rsi, use_container_width=True)
+    
     
     # SECTION TABS
     princing_data,volume, news = st.tabs(['Pricing Data', 'Volume', 'Top 10 News'])
