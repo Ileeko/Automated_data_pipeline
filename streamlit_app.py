@@ -300,7 +300,20 @@ def main():
                         yaxis_title='Volume',
                         width=800,
                         height=700)
-        st.plotly_chart(fig)
+        fig.update_xaxes(
+        rangeslider_visible=False,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=14, label="2w", step="day", stepmode="backward"),
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(count=1, label="1y", step="year", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
+        st.plotly_chart(fig, use_container_width=True)
         
     with news:
         ticker = 'BTC'
