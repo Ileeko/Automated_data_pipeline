@@ -108,8 +108,10 @@ def main():
     # Filter data based on selected date range
     mask_date = (d['Date'] >= start_date) & (d['Date'] <= end_date)
     filtered_data = d.loc[mask_date]
+    
     # Add a dropdown list above the graph to choose the time interval
     interval = st.selectbox('Choose the time interval', ['Daily', 'Weekly', 'Monthly'])
+    
     # Filter data based on the selected interval
     if interval == 'Daily':
         # No filtering needed, daily data is already available
@@ -184,7 +186,7 @@ def main():
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
        
     # PLOTS
-    fig = go.Figure(data=[go.Candlestick(x=filtered_data['Date'],
+    fig = go.Figure(data=[go.Candlestick(
                                         open=filtered_data['Open'],
                                         high=filtered_data['High'],
                                         low=filtered_data['Low'],
