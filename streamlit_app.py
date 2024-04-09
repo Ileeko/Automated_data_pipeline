@@ -108,6 +108,8 @@ def main():
     # Filter data based on selected date range
     mask_date = (d['Date'] >= start_date) & (d['Date'] <= end_date)
     filtered_data = d.loc[mask_date]
+    filtered_data['Date'] = pd.to_datetime(filtered_data['Date'])
+    filtered_data.set_index('Date', inplace=True)
     
     # Add a dropdown list above the graph to choose the time interval
     interval = st.selectbox('Choose the time interval', ['Daily', 'Weekly', 'Monthly'])
@@ -126,7 +128,7 @@ def main():
         
     elif interval == 'Weekly':
         # Aggregate weekly data
-        filtered_data = filtered_data.resample('W-SUN', on='Date').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        filtered_data = filtered_data.resample('W-SUN').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
         resample_rule = 'W'  # Set resample rule for SMA calculation
         sma20_period = 1
         sma100_period = 10
@@ -136,7 +138,7 @@ def main():
         rsi_wind = 14
     else:  # Monthly
         # Aggregate monthly data
-        filtered_data = filtered_data.resample('M',  on='Date').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        filtered_data = filtered_data.resample('M').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
         resample_rule = 'M'  # Set resample rule for SMA calculation
         sma20_period = 2
         sma100_period = 5
@@ -186,7 +188,7 @@ def main():
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
        
     # PLOTS
-    fig = go.Figure(data=[go.Candlestick(
+    fig = go.Figure(data=[go.Candlestick(x=filtered_data.index,
                                         open=filtered_data['Open'],
                                         high=filtered_data['High'],
                                         low=filtered_data['Low'],
