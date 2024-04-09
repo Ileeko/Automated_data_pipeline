@@ -134,7 +134,7 @@ def main():
         rsi_wind = 14
     else:  # Monthly
         # Aggregate monthly data
-        filtered_data = filtered_data.resample('M',  on='Date')).agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        filtered_data = filtered_data.resample('M',  on='Date').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
         resample_rule = 'M'  # Set resample rule for SMA calculation
         sma20_period = 2
         sma100_period = 5
