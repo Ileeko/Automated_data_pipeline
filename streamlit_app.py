@@ -108,7 +108,81 @@ def main():
     # Filter data based on selected date range
     mask_date = (d['Date'] >= start_date) & (d['Date'] <= end_date)
     filtered_data = d.loc[mask_date]
+    # Add a dropdown list above the graph to choose the time interval
+    interval = st.selectbox('Choose the time interval', ['Daily', 'Weekly', 'Monthly'])
+    # Filter data based on the selected interval
+    if interval == 'Daily':
+        # No filtering needed, daily data is already available
+        filtered_data = filtered_data
+        resample_rule = None  # We won't resample the data
+        sma20_period = 20
+        sma100_period = 100
+        sma200_period = 200
+        ema9_period = 9
+        ema18_period = 18
+        rsi_wind = 14
+        
+    elif interval == 'Weekly':
+        # Aggregate weekly data
+        filtered_data = filtered_data.resample('W-SUN').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        resample_rule = 'W'  # Set resample rule for SMA calculation
+        sma20_period = 1
+        sma100_period = 10
+        sma200_period = 20
+        ema9_period = 4
+        ema18_period = 8
+        rsi_wind = 14
+    else:  # Monthly
+        # Aggregate monthly data
+        filtered_data = filtered_data.resample('M').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        resample_rule = 'M'  # Set resample rule for SMA calculation
+        sma20_period = 2
+        sma100_period = 5
+        sma200_period = 10
+        ema9_period = 2
+        ema18_period = 4
+        rsi_wind = 10
+        
+    # Calculate RSI 
+    def get_rsi(data, window):
+        
+        # Calculate rolling gains and losses 
+        delta = data['Close'].diff() 
+        gain = delta.where(delta > 0, 0) 
+        loss = -delta.where(delta < 0, 0) 
+        
+        # Calculate average gain and loss 
+        average_gain = gain.rolling(window=window).mean() 
+        average_loss = loss.rolling(window=window).mean() 
+        
+        # Calculate RSI 
+        rs = average_gain / average_loss.abs() 
+        rsi = 100 - (100 / (1 + rs)) 
+        return rsi
     
+    # Calculate the Simple Moving Average (SMA) on the closing data
+    if resample_rule is None:
+        filtered_data['SMA20'] = filtered_data['Close'].rolling(window=sma20_period).mean()
+        filtered_data['SMA100'] = filtered_data['Close'].rolling(window=sma100_period).mean()
+        filtered_data['SMA200'] = filtered_data['Close'].rolling(window=sma200_period).mean()
+        filtered_data['EMA9'] = filtered_data['Close'].ewm(span=ema9_period, adjust=False).mean()
+        filtered_data['EMA18'] = filtered_data['Close'].ewm(span=ema18_period, adjust=False).mean()
+        filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
+    elif resample_rule == 'W':
+        filtered_data['SMA20'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma20_period * 7).mean()
+        filtered_data['SMA100'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma100_period).mean()
+        filtered_data['SMA200'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma200_period).mean()
+        filtered_data['EMA9'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema9_period, adjust=False).mean()
+        filtered_data['EMA18'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema18_period, adjust=False).mean()
+        filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
+    elif resample_rule == 'M':
+        filtered_data['SMA20'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma20_period).mean()
+        filtered_data['SMA100'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma100_period).mean()
+        filtered_data['SMA200'] = filtered_data['Close'].resample(resample_rule).mean().rolling(window=sma200_period).mean()
+        filtered_data['EMA9'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema9_period, adjust=False).mean()
+        filtered_data['EMA18'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema18_period, adjust=False).mean()
+        filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
+       
     # PLOT
     fig = go.Figure(data=[go.Candlestick(x=filtered_data['Date'],
                                      open=filtered_data['Open'],
