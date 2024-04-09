@@ -124,7 +124,7 @@ def main():
         
     elif interval == 'Weekly':
         # Aggregate weekly data
-        filtered_data = filtered_data.resample('W-SUN').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
+        filtered_data = filtered_data.resample('W-SUN', on='Date').agg({'Open':'first', 'High':'max', 'Low':'min', 'Close':'last'})
         resample_rule = 'W'  # Set resample rule for SMA calculation
         sma20_period = 1
         sma100_period = 10
@@ -183,18 +183,63 @@ def main():
         filtered_data['EMA18'] = filtered_data['Close'].resample(resample_rule).mean().ewm(span=ema18_period, adjust=False).mean()
         filtered_data['RSI'] = get_rsi(filtered_data, rsi_wind)
        
-    # PLOT
+    # PLOTS
     fig = go.Figure(data=[go.Candlestick(x=filtered_data['Date'],
-                                     open=filtered_data['Open'],
-                                     high=filtered_data['High'],
-                                     low=filtered_data['Low'],
-                                     close=filtered_data['Close'])])
+                                        open=filtered_data['Open'],
+                                        high=filtered_data['High'],
+                                        low=filtered_data['Low'],
+                                        close=filtered_data['Close'],
+                                        name='Candlestick'),
+                        go.Scatter(x=filtered_data['Date'],
+                                    y=filtered_data['SMA20'],
+                                    mode='lines',
+                                    line=dict(color='orange', width=2),
+                                    name=f'SMA {sma20_period}',
+                                    visible='legendonly'),
+                        go.Scatter(x=filtered_data['Date'],
+                                    y=filtered_data['SMA100'],
+                                    mode='lines',
+                                    line=dict(color='red', width=2),
+                                    name=f'SMA {sma100_period}',
+                                    visible='legendonly'),
+                        go.Scatter(x=filtered_data['Date'],
+                                    y=filtered_data['SMA200'],
+                                    mode='lines',
+                                    line=dict(color='green', width=2),
+                                    name=f'SMA {sma200_period}',
+                                    visible='legendonly'),
+                        go.Scatter(x=filtered_data['Date'],
+                                    y=filtered_data['EMA9'],
+                                    mode='lines',
+                                    line=dict(color='white', width=2),
+                                    name=f'EMA {ema9_period}',
+                                    visible='legendonly'),
+                        go.Scatter(x=filtered_data['Date'],
+                                    y=filtered_data['EMA18'],
+                                    mode='lines',
+                                    line=dict(color='pink', width=2),
+                                    name=f'EMA {ema18_period}',
+                                    visible='legendonly')
+                        ])
 
     fig.update_layout(title='Candlestick BTC- USD ',
                       xaxis_title='Date',
                       yaxis_title='Price',
-                      width=800,
-                      height=700)
+                      height=900)
+    fig.update_xaxes(
+        rangeslider_visible=False,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=7, label="1w", step="day", stepmode="backward"),
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(count=1, label="YTD", step="year", stepmode="todate"),
+                dict(count=1, label="1y", step="year", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
     st.plotly_chart(fig)
     
     # SECTION TABS
